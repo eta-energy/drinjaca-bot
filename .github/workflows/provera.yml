@@ -1,0 +1,36 @@
+name: Provjera vodostaja Drinjace
+
+on:
+  schedule:
+    - cron: "5 * * * *" # Pokreće se svaki sat u 5. minutu (npr. 12:05, 13:05...)
+  workflow_dispatch:    # Omogućava ti i ručno pokretanje na dugme
+
+permissions:
+  contents: write
+
+jobs:
+  provjeri:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preuzmi kod
+        uses: actions/checkout@v4
+
+      - name: Podesi Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instaliraj biblioteke
+        run: pip install requests beautifulsoup4
+
+      - name: Pokreni provjeru
+        env:
+          EXPO_PUSH_TOKEN: ${{ secrets.EXPO_PUSH_TOKEN }}
+        run: python provjera.py
+
+      - name: Sacuvaj nove podatke
+        run: |
+          git config user.name "GitHub Bot"
+          git config user.email "bot@github.com"
+          git add podaci.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Azuriran vodostaj" && git push)
